@@ -3,19 +3,19 @@ const Task = require('../models/Task');
 const Project = require('../models/Project');
 const Action = require('../models/Action');
 
-// Get all comments for a task
+
 exports.getComments = async (req, res) => {
   try {
     const { taskId } = req.params;
     
-    // Check if task exists and user has access
+   
     const task = await Task.findById(taskId);
     
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
     
-    // Check if user has access to the project this task belongs to
+   
     const project = await Project.findById(task.projectId);
     
     if (
@@ -36,10 +36,10 @@ exports.getComments = async (req, res) => {
   }
 };
 
-// Create a new comment - admin or manager only
+
 exports.createComment = async (req, res) => {
   try {
-    // Check if user is admin or manager
+  
     if (req.user.role !== 'admin' && req.user.role !== 'manager') {
       return res.status(403).json({ message: 'Not authorized. Admin or manager access required.' });
     }
@@ -47,14 +47,14 @@ exports.createComment = async (req, res) => {
     const { text } = req.body;
     const { taskId } = req.params;
     
-    // Check if task exists
+  
     const task = await Task.findById(taskId);
     
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
     
-    // For managers, check if they created the project this task belongs to
+  
     if (req.user.role === 'manager') {
       const project = await Project.findById(task.projectId);
       if (project.createdBy.toString() !== req.user._id.toString()) {
@@ -73,7 +73,7 @@ exports.createComment = async (req, res) => {
     
     const createdComment = await comment.save();
     
-    // Create action record
+   
     await Action.create({
       action: 'Added Comment',
       user: req.user._id,
@@ -81,7 +81,7 @@ exports.createComment = async (req, res) => {
       targetId: createdComment._id
     });
     
-    // Populate author information
+  
     const populatedComment = await Comment.findById(createdComment._id)
       .populate('author', 'name email');
     
@@ -91,7 +91,7 @@ exports.createComment = async (req, res) => {
   }
 };
 
-// Update comment - admin or author (if manager)
+
 exports.updateComment = async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id);
@@ -100,9 +100,7 @@ exports.updateComment = async (req, res) => {
       return res.status(404).json({ message: 'Comment not found' });
     }
     
-    // Check if user is authorized to update this comment
-    // Admin can update any comment
-    // Managers can only update their own comments
+  
     if (
       req.user.role !== 'admin' && 
       (req.user.role !== 'manager' || comment.author.toString() !== req.user._id.toString())
@@ -115,7 +113,7 @@ exports.updateComment = async (req, res) => {
     
     const updatedComment = await comment.save();
     
-    // Create action record
+
     await Action.create({
       action: 'Updated Comment',
       user: req.user._id,
@@ -123,7 +121,7 @@ exports.updateComment = async (req, res) => {
       targetId: updatedComment._id
     });
     
-    // Populate author information
+    
     const populatedComment = await Comment.findById(updatedComment._id)
       .populate('author', 'name email');
     

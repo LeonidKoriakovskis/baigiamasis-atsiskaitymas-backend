@@ -2,10 +2,9 @@ const Action = require('../models/Action');
 const Project = require('../models/Project');
 const Task = require('../models/Task');
 
-// Get all actions (admin only)
+
 exports.getAllActions = async (req, res) => {
   try {
-    // Only admin can see all actions
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized. Admin access required.' });
     }
@@ -20,19 +19,19 @@ exports.getAllActions = async (req, res) => {
   }
 };
 
-// Get actions for a project
+
 exports.getProjectActions = async (req, res) => {
   try {
     const { projectId } = req.params;
     
-    // Check if project exists and user has access
+   
     const project = await Project.findById(projectId);
     
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
     
-    // All users can view actions for projects they're involved with
+   
     if (
       req.user.role !== 'admin' && 
       project.createdBy.toString() !== req.user._id.toString() && 
@@ -41,23 +40,23 @@ exports.getProjectActions = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to view actions for this project' });
     }
     
-    // Get actions for this project and its tasks
+    
     const projectActions = await Action.find({
       targetType: 'Project',
       targetId: projectId
     }).populate('user', 'name email').sort({ timestamp: -1 });
     
-    // Get all tasks for this project
+   
     const tasks = await Task.find({ projectId });
     const taskIds = tasks.map(task => task._id);
     
-    // Get actions for these tasks
+  
     const taskActions = await Action.find({
       targetType: 'Task',
       targetId: { $in: taskIds }
     }).populate('user', 'name email').sort({ timestamp: -1 });
     
-    // Combine and sort by timestamp
+    
     const actions = [...projectActions, ...taskActions]
       .sort((a, b) => b.timestamp - a.timestamp);
     
@@ -67,12 +66,12 @@ exports.getProjectActions = async (req, res) => {
   }
 };
 
-// Get actions for a user
+
 exports.getUserActions = async (req, res) => {
   try {
     const userId = req.params.userId || req.user._id;
     
-    // If requesting actions for another user, check permissions
+   
     if (userId !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to view actions for this user' });
     }

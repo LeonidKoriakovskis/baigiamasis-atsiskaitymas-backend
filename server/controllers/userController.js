@@ -1,6 +1,6 @@
 const User = require('../models/User');
 
-// Get all users
+
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -10,7 +10,7 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-// Get user by ID
+
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
@@ -25,24 +25,24 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// Update user - admin only
+
 exports.updateUser = async (req, res) => {
   try {
-    // Check if user is admin
+
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized. Admin access required.' });
     }
     
     const { name, email, role } = req.body;
     
-    // Find user by id
+
     const user = await User.findById(req.params.id);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Update fields
+ 
     if (name) user.name = name;
     if (email) user.email = email;
     if (role) user.role = role;
@@ -60,10 +60,10 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Delete user - admin only
+
 exports.deleteUser = async (req, res) => {
   try {
-    // Check if user is admin
+ 
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized. Admin access required.' });
     }

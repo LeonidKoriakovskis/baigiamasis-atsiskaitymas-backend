@@ -2,12 +2,12 @@ const Task = require('../models/Task');
 const Project = require('../models/Project');
 const Action = require('../models/Action');
 
-// Get all tasks for a project
+
 exports.getTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
     
-    // Check if user has access to this project
+
     const project = await Project.findById(projectId);
     
     if (!project) {
@@ -31,7 +31,7 @@ exports.getTasks = async (req, res) => {
   }
 };
 
-// Get task by ID
+
 exports.getTaskById = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
@@ -42,7 +42,7 @@ exports.getTaskById = async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
     
-    // Check if user has access to the project this task belongs to
+  
     const project = await Project.findById(task.projectId);
     
     if (
@@ -59,10 +59,10 @@ exports.getTaskById = async (req, res) => {
   }
 };
 
-// Create a new task - admin or manager only
+
 exports.createTask = async (req, res) => {
   try {
-    // Check if user is admin or manager
+  
     if (req.user.role !== 'admin' && req.user.role !== 'manager') {
       return res.status(403).json({ message: 'Not authorized. Admin or manager access required.' });
     }
@@ -70,14 +70,14 @@ exports.createTask = async (req, res) => {
     const { title, description, status, assignedTo } = req.body;
     const { projectId } = req.params;
     
-    // Check if project exists and user has access
+    
     const project = await Project.findById(projectId);
     
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
     
-    // For managers, check if they created the project
+ 
     if (
       req.user.role === 'manager' && 
       project.createdBy.toString() !== req.user._id.toString()
@@ -95,7 +95,7 @@ exports.createTask = async (req, res) => {
     
     const createdTask = await task.save();
     
-    // Create action record
+  
     await Action.create({
       action: 'Created Task',
       user: req.user._id,
@@ -109,7 +109,7 @@ exports.createTask = async (req, res) => {
   }
 };
 
-// Update task - admin or creator (if manager)
+
 exports.updateTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
@@ -118,12 +118,10 @@ exports.updateTask = async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
     
-    // Get the project to check permissions
+   
     const project = await Project.findById(task.projectId);
     
-    // Check if user is authorized to update this task
-    // Admin can update any task
-    // Managers can only update tasks in projects they created
+    
     if (
       req.user.role !== 'admin' && 
       (req.user.role !== 'manager' || project.createdBy.toString() !== req.user._id.toString())
@@ -133,7 +131,7 @@ exports.updateTask = async (req, res) => {
     
     const { title, description, status, assignedTo } = req.body;
     
-    // Update fields
+  
     if (title) task.title = title;
     if (description) task.description = description;
     if (status) task.status = status;
@@ -141,7 +139,7 @@ exports.updateTask = async (req, res) => {
     
     const updatedTask = await task.save();
     
-    // Create action record
+
     await Action.create({
       action: 'Updated Task',
       user: req.user._id,
@@ -155,7 +153,7 @@ exports.updateTask = async (req, res) => {
   }
 };
 
-// Delete task - admin or creator (if manager)
+
 exports.deleteTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
@@ -164,12 +162,10 @@ exports.deleteTask = async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
     
-    // Get the project to check permissions
+ 
     const project = await Project.findById(task.projectId);
     
-    // Check if user is authorized to delete this task
-    // Admin can delete any task
-    // Managers can only delete tasks in projects they created
+   
     if (
       req.user.role !== 'admin' && 
       (req.user.role !== 'manager' || project.createdBy.toString() !== req.user._id.toString())
@@ -179,7 +175,7 @@ exports.deleteTask = async (req, res) => {
     
     await task.deleteOne();
     
-    // Create action record
+
     await Action.create({
       action: 'Deleted Task',
       user: req.user._id,
