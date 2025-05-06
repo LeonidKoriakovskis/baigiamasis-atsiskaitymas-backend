@@ -64,11 +64,12 @@ exports.createProject = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized. Admin or manager access required.' });
     }
     
-    const { title, description, members } = req.body;
+    const { title, description, members, status } = req.body;
     
     const project = new Project({
       title,
       description,
+      status: status || 'pending',
       createdBy: req.user._id,
       members: members || []
     });
@@ -105,12 +106,13 @@ exports.updateProject = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this project' });
     }
     
-    const { title, description, members } = req.body;
+    const { title, description, members, status } = req.body;
     
   
     if (title) project.title = title;
     if (description) project.description = description;
     if (members) project.members = members;
+    if (status) project.status = status;
     
     const updatedProject = await project.save();
     

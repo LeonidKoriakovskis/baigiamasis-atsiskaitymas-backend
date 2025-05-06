@@ -62,47 +62,44 @@ exports.getTaskById = async (req, res) => {
 
 exports.createTask = async (req, res) => {
   try {
-  
     if (req.user.role !== 'admin' && req.user.role !== 'manager') {
       return res.status(403).json({ message: 'Not authorized. Admin or manager access required.' });
     }
-    
-    const { title, description, status, assignedTo } = req.body;
+    const { title, description, status, assignedTo, priority, dueDate } = req.body;
     const { projectId } = req.params;
-    
-    
+
     const project = await Project.findById(projectId);
-    
+
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
-    
- 
+
     if (
       req.user.role === 'manager' && 
       project.createdBy.toString() !== req.user._id.toString()
     ) {
       return res.status(403).json({ message: 'Managers can only create tasks for projects they created' });
     }
-    
+
     const task = new Task({
       title,
       description,
       status: status || 'todo',
+      priority: priority || 'medium',
+      dueDate,
       assignedTo,
       projectId
     });
-    
+
     const createdTask = await task.save();
-    
-  
+
     await Action.create({
       action: 'Created Task',
       user: req.user._id,
       targetType: 'Task',
       targetId: createdTask._id
     });
-    
+
     res.status(201).json(createdTask);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -113,32 +110,30 @@ exports.createTask = async (req, res) => {
 exports.updateTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
-    
+
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
-    
-   
+
     const project = await Project.findById(task.projectId);
-    
-    
+
     if (
       req.user.role !== 'admin' && 
       (req.user.role !== 'manager' || project.createdBy.toString() !== req.user._id.toString())
     ) {
       return res.status(403).json({ message: 'Not authorized to update this task' });
     }
-    
-    const { title, description, status, assignedTo } = req.body;
-    
-  
+
+    const { title, description, status, assignedTo, priority, dueDate } = req.body;
+
     if (title) task.title = title;
     if (description) task.description = description;
     if (status) task.status = status;
+    if (priority) task.priority = priority;
+    if (dueDate) task.dueDate = dueDate;
     if (assignedTo) task.assignedTo = assignedTo;
-    
+
     const updatedTask = await task.save();
-    
 
     await Action.create({
       action: 'Updated Task',
@@ -146,7 +141,7 @@ exports.updateTask = async (req, res) => {
       targetType: 'Task',
       targetId: updatedTask._id
     });
-    
+
     res.json(updatedTask);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -157,14 +152,14 @@ exports.updateTask = async (req, res) => {
 exports.deleteTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
-    
+
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
-    
+
  
     const project = await Project.findById(task.projectId);
-    
+
    
     if (
       req.user.role !== 'admin' && 
@@ -172,7 +167,7 @@ exports.deleteTask = async (req, res) => {
     ) {
       return res.status(403).json({ message: 'Not authorized to delete this task' });
     }
-    
+
     await task.deleteOne();
     
 
