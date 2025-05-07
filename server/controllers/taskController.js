@@ -6,25 +6,25 @@ const Action = require('../models/Action');
 exports.getTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
-    
-
     const project = await Project.findById(projectId);
-    
+
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
-    
-    if (
-      req.user.role !== 'admin' && 
-      project.createdBy.toString() !== req.user._id.toString() && 
-      !project.members.includes(req.user._id)
-    ) {
-      return res.status(403).json({ message: 'Not authorized to access tasks for this project' });
-    }
-    
+
+    // Allow all roles to view tasks
+    // Remove the membership check for users
+    // if (
+    //   req.user.role !== 'admin' && 
+    //   project.createdBy.toString() !== req.user._id.toString() && 
+    //   !project.members.includes(req.user._id)
+    // ) {
+    //   return res.status(403).json({ message: 'Not authorized to access tasks for this project' });
+    // }
+
     const tasks = await Task.find({ projectId })
       .populate('assignedTo', 'name email');
-    
+
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
