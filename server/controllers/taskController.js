@@ -48,7 +48,7 @@ exports.getTaskById = async (req, res) => {
     if (
       req.user.role !== 'admin' && 
       project.createdBy.toString() !== req.user._id.toString() && 
-      !project.members.includes(req.user._id)
+      !project.members.some(member => member._id.toString() === req.user._id.toString())
     ) {
       return res.status(403).json({ message: 'Not authorized to access this task' });
     }
@@ -76,9 +76,10 @@ exports.createTask = async (req, res) => {
 
     if (
       req.user.role === 'manager' && 
-      project.createdBy.toString() !== req.user._id.toString()
+      project.createdBy.toString() !== req.user._id.toString() && 
+      !project.members.some(member => member._id.toString() === req.user._id.toString())
     ) {
-      return res.status(403).json({ message: 'Managers can only create tasks for projects they created' });
+      return res.status(403).json({ message: 'Managers can only create tasks for projects they created or are members of' });
     }
 
     const task = new Task({
@@ -119,7 +120,9 @@ exports.updateTask = async (req, res) => {
 
     if (
       req.user.role !== 'admin' && 
-      (req.user.role !== 'manager' || project.createdBy.toString() !== req.user._id.toString())
+      (req.user.role !== 'manager' || 
+       (project.createdBy.toString() !== req.user._id.toString() && 
+        !project.members.some(member => member._id.toString() === req.user._id.toString())))
     ) {
       return res.status(403).json({ message: 'Not authorized to update this task' });
     }
@@ -163,7 +166,9 @@ exports.deleteTask = async (req, res) => {
    
     if (
       req.user.role !== 'admin' && 
-      (req.user.role !== 'manager' || project.createdBy.toString() !== req.user._id.toString())
+      (req.user.role !== 'manager' || 
+       (project.createdBy.toString() !== req.user._id.toString() && 
+        !project.members.some(member => member._id.toString() === req.user._id.toString())))
     ) {
       return res.status(403).json({ message: 'Not authorized to delete this task' });
     }

@@ -101,7 +101,9 @@ exports.updateProject = async (req, res) => {
    
     if (
       req.user.role !== 'admin' && 
-      (req.user.role !== 'manager' || project.createdBy.toString() !== req.user._id.toString())
+      (req.user.role !== 'manager' || 
+       (project.createdBy.toString() !== req.user._id.toString() && 
+        !project.members.some(member => member._id.toString() === req.user._id.toString())))
     ) {
       return res.status(403).json({ message: 'Not authorized to update this project' });
     }
@@ -142,7 +144,9 @@ exports.deleteProject = async (req, res) => {
     
     if (
       req.user.role !== 'admin' && 
-      (req.user.role !== 'manager' || project.createdBy.toString() !== req.user._id.toString())
+      (req.user.role !== 'manager' || 
+       (project.createdBy.toString() !== req.user._id.toString() && 
+        !project.members.some(member => member._id.toString() === req.user._id.toString())))
     ) {
       return res.status(403).json({ message: 'Not authorized to delete this project' });
     }
